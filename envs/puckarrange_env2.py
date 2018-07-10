@@ -94,7 +94,7 @@ class PuckArrange:
         # Initialize state as null
         self.state = []
         
-        halfSide = self.blockSize/2
+        halfSide = int(self.blockSize / 2)
                 
         # self.state[0] encodes block layout
         self.state.append(np.zeros(self.observation_space.spaces[0].shape))
@@ -123,7 +123,7 @@ class PuckArrange:
         
         X,Y = np.meshgrid(self.moveCenters,self.moveCenters)
         coords = np.stack([np.reshape(Y,[-1]), np.reshape(X,[-1])],axis=0)
-        halfSide = self.blockSize/2
+        halfSide = int(self.blockSize / 2)
 
         # if PICK
         if action < self.num_moves:
