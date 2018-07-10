@@ -6,7 +6,7 @@ import random
 import copy as cp
 
 #from baselines.common.segment_tree import SumSegmentTree, MinSegmentTree
-from segment_tree import SumSegmentTree, MinSegmentTree
+from .segment_tree import SumSegmentTree, MinSegmentTree
 
 
 class ReplayBuffer(object):
