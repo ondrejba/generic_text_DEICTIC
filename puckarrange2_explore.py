@@ -18,11 +18,11 @@ import sys as sys
 import numpy as np
 import time as time
 import tensorflow as tf
-import tf_util_rob as U
-import models as models
+from . import tf_util_rob as U
+from . import models as models
 # from replay_buffer2 import ReplayBuffer, PrioritizedReplayBuffer
-from replay_buffer8 import ReplayBuffer, PrioritizedReplayBuffer
-from schedules import LinearSchedule
+from .replay_buffer8 import ReplayBuffer, PrioritizedReplayBuffer
+from .schedules import LinearSchedule
 import matplotlib.pyplot as plt
 import copy as cp
 import time
@@ -30,7 +30,7 @@ import time
 # Two disks placed in a 224x224 image. Disks placed randomly initially.
 # Reward given when the pucks are placed adjacent. Agent must learn to pick
 # up one of the disks and place it next to the other.
-import envs.puckarrange_env2 as envstandalone
+from .envs import puckarrange_env2 as envstandalone
 
 
 # Define a couple of cosmetic functions
@@ -292,6 +292,7 @@ def main(initEnvStride, envStride, fileIn, fileOut, inputmaxtimesteps):
     # show initial observation
     print("initial observation shape:", obs[0].shape)
     canvas = plt.imshow(obs[0][:, :, 0])
+    plt.colorbar()
     plt.pause(1.0)
 
     # Load neural network model if one was specified.
