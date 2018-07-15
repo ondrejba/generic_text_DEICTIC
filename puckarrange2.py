@@ -137,7 +137,7 @@ def build_getMoveActionDescriptors(make_obs_ph,actionShape,actionShapeSmall,stri
 
 
 
-def main(initEnvStride, envStride, fileIn, fileOut, inputmaxtimesteps):
+def main(initEnvStride, envStride, fileIn, fileOut, inputmaxtimesteps, numCpu, gpuMemFraction):
 
     np.set_printoptions(formatter={'float_kind':lambda x: "%.2f" % x})
 
@@ -158,7 +158,6 @@ def main(initEnvStride, envStride, fileIn, fileOut, inputmaxtimesteps):
     exploration_fraction=1
     exploration_final_eps=0.1
     gamma=.90
-    num_cpu = 16
 
     # Used by buffering and DQN
     learning_starts=60
@@ -279,7 +278,7 @@ def main(initEnvStride, envStride, fileIn, fileOut, inputmaxtimesteps):
     V = np.zeros([2,])
     
     # Start tensorflow session
-    sess = U.make_session(num_cpu)
+    sess = U.make_session(numCpu, gpu_memory_fraction=gpuMemFraction)
     sess.__enter__()
 
     # Initialize things
@@ -427,12 +426,18 @@ def main(initEnvStride, envStride, fileIn, fileOut, inputmaxtimesteps):
 #    plt.imshow(np.reshape(qPlace[:,1],[gridSize,gridSize]))
 #    plt.show()
 
-if len(sys.argv) == 6:
+if len(sys.argv) == 8:
     initEnvStride = np.int32(sys.argv[1])
     envStride = np.int32(sys.argv[2])
     fileIn = sys.argv[3]
     fileOut = sys.argv[4]
     inputmaxtimesteps = np.int32(sys.argv[5])
+    numCpu = np.int32(sys.argv[6])
+
+    if sys.argv[7] == "None":
+        gpuMemFraction = None
+    else:
+        gpuMemFraction = np.float32(sys.argv[7])
 else:
 #    envStride = 28
 #    envStride = 7
@@ -443,8 +448,10 @@ else:
 #    fileOut = './whatilearned28'
     inputmaxtimesteps = 2000
 #    inputmaxtimesteps = 100
+    numCpu = 1
+    gpuMemFraction = 0.01
 
-main(initEnvStride, envStride, fileIn, fileOut, inputmaxtimesteps)
+main(initEnvStride, envStride, fileIn, fileOut, inputmaxtimesteps, numCpu, gpuMemFraction)
     
 #if __name__ == '__main__':
 #    main()

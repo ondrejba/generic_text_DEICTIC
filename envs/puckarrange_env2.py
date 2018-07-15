@@ -24,14 +24,14 @@ class PuckArrange:
         rmin, rmax = np.where(rows)[0][[0, -1]]
         cmin, cmax = np.where(cols)[0][[0, -1]]
         return rmin, rmax, cmin, cmax
-    
+
     def __init__(self):
-        
+
 #        mnist = tf.contrib.learn.datasets.load_dataset("mnist")
 #        train_labels = np.asarray(mnist.train.labels, dtype=np.int32)
 #        blocksOfInterestIdx = np.nonzero(train_labels==2)[0]
 #        self.blocks = mnist.train.images[blocksOfInterestIdx]
-        
+
         self.blockSize = 28 # edge size of one block
         self.stride = 28 # num grid cells between adjacent move destinations
 #        self.stride = 24 # num grid cells between adjacent move destinations
@@ -54,13 +54,13 @@ class PuckArrange:
         self.numBlocksInRowGoal = 2
 #        self.blockType = 'Numerals'
         self.blockType = 'Disks'
-        
+
         if self.blockType == 'Numerals': # load MNIST numerals
             mnist = tf.contrib.learn.datasets.load_dataset("mnist")
             train_labels = np.asarray(mnist.train.labels, dtype=np.int32)
             blocksOfInterestIdx = np.nonzero(train_labels==2)[0]
             self.blocks = mnist.train.images[blocksOfInterestIdx]
-            
+
         elif self.blockType == 'Disks': # load random radius disks instead
             numBlocks = 10
             minRadius = 8
@@ -77,7 +77,7 @@ class PuckArrange:
 
         self.reset()
 
-    
+
     def reset(self):
 
         # grid used to select actions
@@ -90,23 +90,23 @@ class PuckArrange:
 #        initMoveCenters = range(int(self.blockSize/2),int(self.gridSize-(self.blockSize/2)+1),14)
         initMoveCenters = range(int(self.blockSize/2),int(self.gridSize-(self.blockSize/2)+1),self.initStride)
 #        initMoveCenters = self.moveCenters
-        
+
         # Initialize state as null
         self.state = []
-        
-        halfSide = self.blockSize/2
-                
+
+        halfSide = int(self.blockSize / 2)
+
         # self.state[0] encodes block layout
         self.state.append(np.zeros(self.observation_space.spaces[0].shape))
-        
+
         for i in range(self.num_blocks):
             while True:
-                
+
                 ii = initMoveCenters[np.random.randint(len(initMoveCenters))]
                 jj = initMoveCenters[np.random.randint(len(initMoveCenters))]
                 iiRangeOuter, jjRangeOuter = np.meshgrid(range(ii-halfSide,ii+halfSide),range(jj-halfSide,jj+halfSide))
-                
-                if True not in (self.state[0][iiRangeOuter,iiRangeOuter,0] > 0): # if this block empty
+
+                if True not in (self.state[0][iiRangeOuter,jjRangeOuter,0] > 0): # if this block empty
                     blockSel = np.random.randint(np.shape(self.blocks)[0])
                     img = np.reshape(self.blocks[blockSel],[self.blockSize,self.blockSize])
                     self.state[0][iiRangeOuter,jjRangeOuter,0] = img
@@ -115,45 +115,45 @@ class PuckArrange:
         # self.state[1] encodes what the robot is holding -- start out holding nothing (0)
         self.state.append(0)
         self.episode_timer = 0
-        
+
         return np.array(self.state)
-    
-    
+
+
     def step(self, action):
-        
+
         X,Y = np.meshgrid(self.moveCenters,self.moveCenters)
         coords = np.stack([np.reshape(Y,[-1]), np.reshape(X,[-1])],axis=0)
-        halfSide = self.blockSize/2
+        halfSide = int(self.blockSize / 2)
 
         # if PICK
         if action < self.num_moves:
-            
+
             # if not holding anything
             if self.state[1] == 0:
                 ii = coords[0,action]
                 jj = coords[1,action]
                 iiRangeInner, jjRangeInner = np.meshgrid(range(ii-halfSide+self.gap,ii+halfSide-self.gap),range(jj-halfSide+self.gap,jj+halfSide-self.gap))
                 iiRangeOuter, jjRangeOuter = np.meshgrid(range(ii-halfSide,ii+halfSide),range(jj-halfSide,jj+halfSide))
-                
+
                 if np.sum(self.state[0][iiRangeInner,jjRangeInner,0]) > 0:
                     if (np.sum(self.state[0][iiRangeInner,jjRangeInner,0]) - np.sum(self.state[0][iiRangeOuter,jjRangeOuter,0])) == 0:
                         self.holdingImage = np.copy(self.state[0][iiRangeInner,jjRangeInner,0])
                         self.state[1] = 1 # set holding to contents of action target
                         self.state[0][iiRangeInner,jjRangeInner,0] = np.zeros([len(iiRangeInner),len(jjRangeInner)])
 
-            
+
         # if PLACE
         elif action < 2*self.num_moves:
-            
+
             action -= self.num_moves
-            
+
             if self.state[1] != 0:
-                
+
                 ii = coords[0,action]
                 jj = coords[1,action]
                 iiRangeInner, jjRangeInner = np.meshgrid(range(ii-halfSide+self.gap,ii+halfSide-self.gap),range(jj-halfSide+self.gap,jj+halfSide-self.gap))
                 iiRangeOuter, jjRangeOuter = np.meshgrid(range(ii-halfSide,ii+halfSide),range(jj-halfSide,jj+halfSide))
-                
+
                 if True not in (self.state[0][iiRangeOuter,jjRangeOuter,0] > 0): # if this square is empty
                     self.state[0][iiRangeInner,jjRangeInner,0] = np.copy(self.holdingImage)
                     self.state[1] = 0 # set holding to zero
@@ -164,7 +164,7 @@ class PuckArrange:
         # check for termination condition
         reward = 0
         done = 0
-        
+
         # check for two adjacent blocks
         if self.state[1] == 0: # if both objs on the grid
             bounds = self.getBoundingBox(self.state[0][:,:,0])
@@ -177,10 +177,10 @@ class PuckArrange:
             self.episode_timer = 0
             done = 1
         self.episode_timer += 1
-        
-        return self.state, reward, done, {}        
 
-    
+        return self.state, reward, done, {}
+
+
     def render(self):
         print("grid:")
         plt.imshow(np.tile(self.state[0],[1,1,3]))
@@ -188,4 +188,3 @@ class PuckArrange:
 #        print(str(self.state[0][:,:,0]))
 #        print("holding: " + str(self.state[1]))
 
-        

@@ -224,11 +224,23 @@ def get_session():
     return tf.get_default_session()
 
 
-def make_session(num_cpu):
-    """Returns a session that will use <num_cpu> CPU's only"""
+def make_session(num_cpu, gpu_memory_fraction=None):
+    """
+    Returns a session that use a limited number of CPUs and GPU memory.
+    :param num_cpu:                     Number of CPUs.
+    :param gpu_memory_fraction:         Fraction of GPU memory to use.
+    :return:                            Tensorflow session.
+    """
+
+    gpu_options = None
+    if gpu_memory_fraction is not None:
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_memory_fraction)
+
     tf_config = tf.ConfigProto(
         inter_op_parallelism_threads=num_cpu,
-        intra_op_parallelism_threads=num_cpu)
+        intra_op_parallelism_threads=num_cpu,
+        gpu_options=gpu_options)
+
     return tf.Session(config=tf_config)
 
 

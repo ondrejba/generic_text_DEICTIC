@@ -91,7 +91,7 @@ class PuckArrange:
                 jj = initMoveCenters[np.random.randint(len(initMoveCenters))]
                 iiRangeOuter, jjRangeOuter = np.meshgrid(range(ii-halfSide,ii+halfSide),range(jj-halfSide,jj+halfSide))
                 
-                if True not in (self.state[0][iiRangeOuter,iiRangeOuter,0] > 0): # if this block empty
+                if True not in (self.state[0][iiRangeOuter,jjRangeOuter,0] > 0): # if this block empty
                     blockSel = np.random.randint(np.shape(self.blocks)[0])
                     img = np.reshape(self.blocks[blockSel],[self.blockSize,self.blockSize])
                     img = np.float32(img / 255.)
