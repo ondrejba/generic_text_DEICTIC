@@ -140,9 +140,6 @@ class PuckArrange:
                         self.holdingImage = np.copy(self.state[0][iiRangeInner,jjRangeInner,0])
                         self.state[1] = 1 # set holding to contents of action target
                         self.state[0][iiRangeInner,jjRangeInner,0] = np.zeros([len(iiRangeInner),len(jjRangeInner)])
-
-                        print("PICK")
-
             
         # if PLACE
         elif action < 2*self.num_moves:
@@ -159,13 +156,6 @@ class PuckArrange:
                 if True not in (self.state[0][iiRangeOuter,jjRangeOuter,0] > 0): # if this square is empty
                     self.state[0][iiRangeInner,jjRangeInner,0] = np.copy(self.holdingImage)
                     self.state[1] = 0 # set holding to zero
-
-                    print("PLACE")
-                    plt.imshow(self.state[0][:, :, 0])
-                    plt.show()
-
-        else:
-            print("error")
 
         # check for termination condition
         reward = 0
