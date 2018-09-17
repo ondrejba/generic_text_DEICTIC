@@ -154,6 +154,43 @@ def _cnn_to_mlp_state_embed(convs, hiddens, dueling, action_input, state_input, 
         else:
             return action_scores
 
+
+def _branch_cnn_to_mlp(convs, hand_hiddens, final_hiddens, depth_input, hand_input, num_actions, scope, reuse=False):
+
+    with tf.variable_scope(scope, reuse=reuse):
+
+        depth_x = depth_input
+        hand_x = tf.one_hot(hand_input, depth=2, dtype=tf.float32)
+
+        with tf.variable_scope("convnet"):
+
+            for num_outputs, kernel_size, stride in convs:
+                depth_x = layers.convolution2d(
+                    depth_x, num_outputs=num_outputs, kernel_size=kernel_size, stride=stride, activation_fn=tf.nn.relu
+                )
+
+        with tf.variable_scope("action_mlp"):
+
+            for num_neurons in hand_hiddens:
+                hand_x = layers.fully_connected(
+                    hand_x, num_neurons, activation_fn=tf.nn.relu
+                )
+
+        depth_x = layers.flatten(depth_x)
+        final_x = tf.concat([depth_x, hand_x], axis=1)
+
+        with tf.variable_scope("final_mlp"):
+
+            for num_neurons in final_hiddens:
+                final_x = layers.fully_connected(
+                    final_x, num_neurons, activation_fn=tf.nn.relu
+                )
+
+            action_scores = layers.fully_connected(final_x, num_outputs=num_actions, activation_fn=None)
+
+        return action_scores
+
+
 def _cnn_to_mlp_symbolic(convs, hiddens, deictic_input, abstract_input, num_actions, num_abstract_actions,
                          abstract_embedding_size, scope, reuse=False):
 
@@ -258,3 +295,7 @@ def cnn_to_mlp_symbolic(convs, hiddens):
 def cnn_to_mlp_symbolic_multiplex(convs, hiddens):
 
     return lambda *args, **kwargs: _cnn_to_mlp_symbolic_multiplex(convs, hiddens, *args, **kwargs)
+
+def branch_cnn_to_mlp(convs, hand_hiddens, final_hiddens):
+
+    return lambda *args, **kwargs: _branch_cnn_to_mlp(convs, hand_hiddens, final_hiddens, *args, **kwargs)
